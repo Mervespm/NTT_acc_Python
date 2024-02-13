@@ -5,9 +5,34 @@
 #include "ntt.h"
 
 
+void enable_cyclecounter(void) {
+    uint64_t tmp;
+    __asm __volatile (
+        "mrs    %[tmp], pmcr_el0\n"
+        "orr    %[tmp], %[tmp], #1\n"
+        "msr    pmcr_el0, %[tmp]\n"
+        "mrs    %[tmp], pmcntenset_el0\n"
+        "orr    %[tmp], %[tmp], #1<<31\n"
+        "msr    pmcntenset_el0, %[tmp]\n"
+        : [tmp] "=r" (tmp)
+   );
+}
+
+
+// To get the data inside the counter register
+uint64_t get_cyclecounter(void) {
+    uint64_t retval;
+    __asm __volatile (
+        "mrs    %[retval], pmccntr_el0\n"
+    : [retval] "=r" (retval));
+    return retval;
+}
+
+
 int main()
 {
-	srand(time(NULL));   // Initialization, should only be called once.
+	srand(time(NULL));
+
 
 int16_t poly[256] = { -1044,  -758,  -359, -1517,  1493,  1422,   287,   202,
    -171,   622,  1577,   182,   962, -1202, -1474,  1468,
@@ -45,23 +70,23 @@ int16_t poly[256] = { -1044,  -758,  -359, -1517,  1493,  1422,   287,   202,
 	ntt(poly);
 	clock_t end = clock();
 	double time_spent = (double)(end - begin); //in microseconds
-	printf("==============\n");
 	int i, j;
-	//for (i=0; i<256; i++){
-	//	printf("%d th: %d\n",i,poly[i]);
-	//}
-	//printf("Time in ms is %lf\n",time_spent);
 	time_spent =0;
+
+  
+
 	for (i=0; i<1000; i++){
 		for (j=0; j<256; j++)
 			poly[j]= rand()%0x10000;
 		begin = clock();
 		ntt(poly);
 		end = clock();
-		time_spent +=(double)(end - begin); 
-
+		time_spent += (double)(end - begin)/CLOCKS_PER_SEC;
+    
 	}
-	printf("Time in ms is %lf\n",time_spent/1000);
+	printf("Time in ms is %lf \n",time_spent/1000);
+
+
 	
 	return 0;
 }
