@@ -77,25 +77,33 @@ void ntt(int16_t r[N]) {
 }
 
 int main() {
+
+    srand(time(NULL));
     int16_t poly[N];
+    double time_spent;
+    int i, j;
     // Initialize poly with your values or a random function
 
     // Initialize new_zetas using zeta_init function
     zeta_init();
 
     // Measure the execution time of the ntt function
-    clock_t start, end;
+    clock_t start, end, begin;
     double cpu_time_used;
 
     start = clock();
-    for (int i = 0; i < 1000; i++) {
-        // Assuming poly is already initialized with values
-        ntt(poly);
-    }
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    for (i=0; i<1000; i++){
 
-    printf("Execution time: %lf seconds\n", cpu_time_used);
+        for (j=0; j<256; j++)
+            poly[j]= rand()%0x10000;
+
+        begin = clock();
+        ntt(poly);
+        end = clock();
+        time_spent += (double)(end - begin)/CLOCKS_PER_SEC;
+
+    }
+    printf("Time in ms is %lf \n",time_spent);
 
     return 0;
 }
